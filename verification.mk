@@ -1,10 +1,19 @@
 VERIFICATION_IMAGE = verification:alpha
 
 LOGS_DIR = logs
-CARAVEL_DIR = $(realpath $(PWD)/caravel)
-CARAVEL_CORE_DIR = $(realpath $(PWD)/caravel_mgmt_soc_litex)
-STANDALONE_DIR = $(PWD)/caravel_mgmt_soc_litex/verilog/dv/tests-standalone
-CARAVEL_TEST_DIR = $(PWD)/caravel_mgmt_soc_litex/verilog/dv/tests-caravel
+PROJECT_ROOT=$(realpath $(PWD))
+CARAVEL_DIR = $(PROJECT_ROOT)/caravel
+CARAVEL_CORE_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex
+STANDALONE_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex/verilog/dv/tests-standalone
+CARAVEL_TEST_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex/verilog/dv/tests-caravel
+
+ifeq ($(wildcard $(CARAVEL_DIR)/.),)
+$(error $(CARAVEL_DIR) not found)
+endif
+
+ifeq ($(wildcard $(CARAVEL_CORE_DIR)/.),)
+$(error $(CARAVEL_CORE_DIR) not found)
+endif
 
 STANDALONE = $(shell cd $(STANDALONE_DIR) && find * -maxdepth 0 -type d)
 CARAVEL_TEST = $(shell cd $(CARAVEL_TEST_DIR) && find * -maxdepth 0 -type d)
@@ -25,7 +34,7 @@ __check_defined = \
 $(call check_defined, PDK_ROOT, Please define missing variables)
 
 DOCKER_RUNNER_CMD = docker run -it \
-			    -v $(PWD):$(PWD) \
+			    -v $(PROJECT_ROOT):$(PROJECT_ROOT) \
 			    -v $(PDK_ROOT):$(PDK_ROOT) \
 			    $(DOCKER_ENV) \
 			    -u $(shell id -u $(USER)):$(shell id -g $(USER)) \
