@@ -1,4 +1,4 @@
-VERIFICATION_IMAGE = verification:alpha
+VERIFICATION_IMAGE = efabless/dv:latest
 
 LOGS_DIR = logs
 PROJECT_ROOT=$(realpath $(PWD))
