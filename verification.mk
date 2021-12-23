@@ -33,7 +33,7 @@ __check_defined = \
 
 $(call check_defined, PDK_ROOT, Please define missing variables)
 
-DOCKER_RUNNER_CMD = docker run -it \
+DOCKER_RUNNER_CMD = docker run -t \
 			    -v $(PROJECT_ROOT):$(PROJECT_ROOT) \
 			    -v $(PDK_ROOT):$(PDK_ROOT) \
 			    $(DOCKER_ENV) \
@@ -41,13 +41,16 @@ DOCKER_RUNNER_CMD = docker run -it \
 			    $(VERIFICATION_IMAGE) \
 
 
+.PHONY: $(CARAVEL_TEST_TARGETS)
+.PHONY: $(CARAVEL_TEST)
+.PHONY: $(STANDALONE_TARGETS)
 .PHONY: $(STANDALONE)
 .PHONY: $(STANDALONE_TARGETS)
 .PHONY: list-standalone
 .PHONY: list-caravel
 .PHONY: list
 
-all: $(STANDALONE-TARGETS) $(CARAVEL_TEST_TARGETS)
+all: $(STANDALONE_TARGETS) $(CARAVEL_TEST_TARGETS)
 
 list: list-standalone list-caravel
 
@@ -61,14 +64,19 @@ logs:
 	@mkdir -p logs
 
 $(STANDALONE_TARGETS): standalone-% : % $(LOGS_DIR)
+	# --------------------------------------------------------
 	# target: $(STANDALONE_DIR)/$*
 	# caravel: $(CARAVEL_DIR)
-	$(DOCKER_RUNNER_CMD) \
-		bash -c "source /.bashrc && env && cd $(STANDALONE_DIR)/$* && make" | tee $(LOGS_DIR)/$@.log
-
+	# running $@
+	@$(DOCKER_RUNNER_CMD) \
+		bash -c "source /.bashrc && env && cd $(STANDALONE_DIR)/$* && make" 2>&1 > $(LOGS_DIR)/$@.log
+	# +++++++++++++++++++++++++++++++++++++++++ done $@
 
 $(CARAVEL_TEST_TARGETS): caravel-% : % $(LOGS_DIR)
+	# --------------------------------------------------------
 	# target: $(CARAVEL_TEST_DIR)/$*
 	# caravel: $(CARAVEL_DIR)
-	$(DOCKER_RUNNER_CMD) \
-		bash -c "source /.bashrc && env && cd $(CARAVEL_TEST_DIR)/$* && make" | tee $(LOGS_DIR)/$@.log
+	# running $@
+	@$(DOCKER_RUNNER_CMD) \
+		bash -c "source /.bashrc && env && cd $(CARAVEL_TEST_DIR)/$* && make" 2>&1 > $(LOGS_DIR)/$@.log
+	# +++++++++++++++++++++++++++++++++++++++++ done $@
