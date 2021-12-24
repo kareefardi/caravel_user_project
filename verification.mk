@@ -7,6 +7,9 @@ CARAVEL_CORE_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex
 STANDALONE_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex/verilog/dv/tests-standalone
 CARAVEL_TEST_DIR = $(PROJECT_ROOT)/caravel_mgmt_soc_litex/verilog/dv/tests-caravel
 
+THREADS ?= 1
+SIM ?= RTL
+
 ifeq ($(wildcard $(CARAVEL_DIR)/.),)
 $(error $(CARAVEL_DIR) not found)
 endif
@@ -69,7 +72,7 @@ $(STANDALONE_TARGETS): standalone-% : % $(LOGS_DIR)
 	# caravel: $(CARAVEL_DIR)
 	# running $@
 	@$(DOCKER_RUNNER_CMD) \
-		bash -c "source /.bashrc && env && cd $(STANDALONE_DIR)/$* && make" 2>&1 > $(LOGS_DIR)/$@.log
+		bash -c "source /.bashrc && env && cd $(STANDALONE_DIR)/$* && make $(SIM) -j$(THREADS)" 2>&1 > $(LOGS_DIR)/$@.log
 	# +++++++++++++++++++++++++++++++++++++++++ done $@
 
 $(CARAVEL_TEST_TARGETS): caravel-% : % $(LOGS_DIR)
@@ -78,5 +81,5 @@ $(CARAVEL_TEST_TARGETS): caravel-% : % $(LOGS_DIR)
 	# caravel: $(CARAVEL_DIR)
 	# running $@
 	@$(DOCKER_RUNNER_CMD) \
-		bash -c "source /.bashrc && env && cd $(CARAVEL_TEST_DIR)/$* && make" 2>&1 > $(LOGS_DIR)/$@.log
+		bash -c "source /.bashrc && env && cd $(CARAVEL_TEST_DIR)/$* && make $(SIM) -j$(THREADS)" 2>&1 > $(LOGS_DIR)/$@.log
 	# +++++++++++++++++++++++++++++++++++++++++ done $@
