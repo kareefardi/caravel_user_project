@@ -17,18 +17,20 @@
 ## PDK 
 PDK_PATH = $(PDK_ROOT)/sky130A
 
-## Caravel Pointers
-CARAVEL_ROOT ?= ../../../caravel
-CARAVEL_PATH ?= $(CARAVEL_ROOT)
-CARAVEL_FIRMWARE_PATH = $(CARAVEL_PATH)/verilog/dv/caravel
-CARAVEL_VERILOG_PATH  = $(CARAVEL_PATH)/verilog
-CARAVEL_RTL_PATH = $(CARAVEL_VERILOG_PATH)/rtl
-CARAVEL_BEHAVIOURAL_MODELS = $(CARAVEL_VERILOG_PATH)/dv/caravel
 
 ## Management SoC Pointers
 MGMT_SOC_PATH ?= ../../../mgmt_core_wrapper
 MGMT_SOC_VERILOG_PATH = $(MGMT_SOC_PATH)/verilog
 MGMT_SOC_RTL_PATH = $(MGMT_SOC_PATH)/verilog/rtl
+
+
+## Caravel Pointers
+CARAVEL_ROOT ?= ../../../caravel
+CARAVEL_PATH ?= $(CARAVEL_ROOT)
+CARAVEL_FIRMWARE_PATH = $(MGMT_SOC_PATH)/verilog/dv/firmware
+CARAVEL_VERILOG_PATH  = $(CARAVEL_PATH)/verilog
+CARAVEL_RTL_PATH = $(CARAVEL_VERILOG_PATH)/rtl
+CARAVEL_BEHAVIOURAL_MODELS = $(CARAVEL_VERILOG_PATH)/dv/caravel
 
 ## User Project Pointers
 UPRJ_VERILOG_PATH ?= ../../../verilog
@@ -67,8 +69,15 @@ endif
 %.vcd: %.vvp
 	vvp $<
 
-%.elf: %.c $(CARAVEL_FIRMWARE_PATH)/sections.lds $(CARAVEL_FIRMWARE_PATH)/start.s check-env
-	${GCC_PATH}/${GCC_PREFIX}-gcc -I $(CARAVEL_PATH) -march=rv32imc -mabi=ilp32 -Wl,-Bstatic,-T,$(CARAVEL_FIRMWARE_PATH)/sections.lds,--strip-debug -ffreestanding -nostdlib -o $@ $(CARAVEL_FIRMWARE_PATH)/start.s $<
+%.elf: %.c $(CARAVEL_FIRMWARE_PATH)/sections.lds $(CARAVEL_FIRMWARE_PATH)/crt0_vex.S $(CARAVEL_FIRMWARE_PATH)/isr.c check-env
+	${GCC_PATH}/${GCC_PREFIX}-gcc \
+		-I $(CARAVEL_PATH) \
+		-I $(MGMT_SOC_PATH)/verilog/dv/generated \
+		-I $(MGMT_SOC_PATH)/verilog/dv \
+		-I $(MGMT_SOC_PATH)/verilog/dv/firmware \
+		-march=rv32i -mabi=ilp32 -D__vexriscv__ \
+		-Wl,-Bstatic,-T,$(CARAVEL_FIRMWARE_PATH)/sections.lds,--strip-debug -ffreestanding -nostdlib \
+		-o $@ $(CARAVEL_FIRMWARE_PATH)/crt0_vex.S $(CARAVEL_FIRMWARE_PATH)/isr.c $<
 
 %.hex: %.elf
 	${GCC_PATH}/${GCC_PREFIX}-objcopy -O verilog $< $@ 
